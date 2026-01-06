@@ -48,6 +48,10 @@ try:
     from core.workflow_endpoints import router as workflow_router
     app.include_router(workflow_router, prefix="/api/v1", tags=["Workflows"])
 
+    # Include Business Research routes
+    from core.business_research.business_research_routes import router as research_router
+    app.include_router(research_router)
+
     # Include OAuth routers
     from oauth_routes import router as oauth_router # Assuming oauth_routes is a top-level module
     app.include_router(oauth_router, prefix="/api/auth", tags=["OAuth"])
