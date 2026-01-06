@@ -47,17 +47,18 @@ export const ResearchStatusTerminal: React.FC<ResearchStatusTerminalProps> = ({
 
       // Simulate progressive log updates
       const logSteps = [
-        { step: 'Searching Google for business information...', progress: 10 },
-        { step: 'Analyzing search results and filtering relevant URLs...', progress: 20 },
-        { step: 'Navigating to official website...', progress: 30 },
-        { step: 'Extracting contact information...', progress: 40 },
-        { step: 'Validating email addresses...', progress: 50 },
-        { step: 'Scanning for social media profiles...', progress: 60 },
-        { step: 'Performing technical website audit...', progress: 70 },
-        { step: 'Analyzing mobile responsiveness...', progress: 80 },
-        { step: 'Evaluating SEO and accessibility...', progress: 90 },
-        { step: 'Identifying service gaps and upsell opportunities...', progress: 95 },
-        { step: 'Generating final report...', progress: 100 }
+        { step: 'Initializing research agent...', progress: 0 },
+        { step: 'Searching Google for businesses in Opelika, Auburn AL, Columbus, West Point GA...', progress: 10 },
+        { step: 'Analyzing location-specific search results...', progress: 20 },
+        { step: 'Navigating to official websites in target areas...', progress: 30 },
+        { step: 'Extracting contact information from local businesses...', progress: 40 },
+        { step: 'Validating Alabama and Georgia business contacts...', progress: 50 },
+        { step: 'Scanning for local social media and directory listings...', progress: 60 },
+        { step: 'Performing technical website audit for local presence...', progress: 70 },
+        { step: 'Analyzing mobile responsiveness for local customers...', progress: 80 },
+        { step: 'Evaluating local SEO and business directory presence...', progress: 90 },
+        { step: 'Identifying service gaps in Opelika/Auburn/Columbus/West Point area...', progress: 95 },
+        { step: 'Generating final regional business intelligence report...', progress: 100 }
       ];
 
       let stepIndex = 0;

@@ -122,8 +122,8 @@ export const BusinessResearchLayout: React.FC<BusinessResearchLayoutProps> = ({ 
     <div className={`max-w-7xl mx-auto p-6 space-y-6 ${className}`}>
       {/* Header */}
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Business Research Agent</h1>
-        <p className="text-gray-600">Live browser-based business intelligence and lead generation</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Regional Business Research Agent</h1>
+        <p className="text-gray-600">Live browser-based business intelligence for Opelika/Auburn, AL and Columbus/West Point, GA</p>
       </div>
 
       {/* Input Form */}

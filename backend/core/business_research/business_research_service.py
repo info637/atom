@@ -66,70 +66,156 @@ class BusinessResearchService:
         return {"task_id": task_id, "status": "QUEUED"}
 
     async def execute_google_search(self, business_name: str) -> List[Dict[str, str]]:
-        """Search Google for business information"""
-        search_query = f"{business_name} business contact email phone website"
+        """Search Google for business information with location-specific targeting"""
+        # Define target locations
+        target_locations = [
+            "Opelika Alabama",
+            "Auburn Alabama", 
+            "Columbus Georgia",
+            "West Point Georgia"
+        ]
+        
+        # Create location-specific search queries
+        search_queries = []
+        for location in target_locations:
+            search_queries.append(f"{business_name} {location}")
+        
         search_results = []
         
-        if PLAYWRIGHT_AVAILABLE and self.page:
-            try:
-                # Use Playwright to search Google
-                await self.page.goto("https://www.google.com")
-                await self.page.fill('input[name="q"]', search_query)
-                await self.page.press('input[name="q"]', "Enter")
-                await self.page.wait_for_selector('h3', timeout=10000)
-                
-                # Extract search results
-                results = await self.page.query_selector_all('h3')
-                for i, result in enumerate(results[:5]):  # Top 5 results
-                    title = await result.inner_text()
-                    link_element = await result.query_selector('xpath=..')
-                    if link_element:
-                        href = await link_element.get_attribute('href')
-                        if href:
-                            search_results.append({
-                                "title": title,
-                                "url": href,
-                                "snippet": f"Result {i+1} for {business_name}"
-                            })
-            except Exception as e:
-                logger.error(f"Google search failed: {e}")
-                # Fallback to mock data
-                search_results = self._get_mock_search_results(business_name)
-        else:
-            # Fallback to HTTP client
-            search_results = self._get_mock_search_results(business_name)
+        for query in search_queries:
+            if PLAYWRIGHT_AVAILABLE and self.page:
+                try:
+                    # Use Playwright to search Google
+                    await self.page.goto("https://www.google.com")
+                    await self.page.fill('input[name="q"]', query)
+                    await self.page.press('input[name="q"]', "Enter")
+                    await self.page.wait_for_selector('h3', timeout=10000)
+                    
+                    # Extract search results
+                    results = await self.page.query_selector_all('h3')
+                    for i, result in enumerate(results[:3]):  # Top 3 results per location
+                        title = await result.inner_text()
+                        link_element = await result.query_selector('xpath=..')
+                        if link_element:
+                            href = await link_element.get_attribute('href')
+                            if href and self._is_location_relevant(href, query):
+                                search_results.append({
+                                    "title": title,
+                                    "url": href,
+                                    "snippet": f"Result {i+1} for {business_name} in {query.split()[-2:]}",
+                                    "location": ' '.join(query.split()[-2:])
+                                })
+                except Exception as e:
+                    logger.error(f"Google search failed for {query}: {e}")
+                    # Fallback to location-specific mock data
+                    location = ' '.join(query.split()[-2:])
+                    search_results.extend(self._get_location_specific_mock_results(business_name, location))
+            else:
+                # Fallback to location-specific HTTP client
+                location = ' '.join(query.split()[-2:])
+                search_results.extend(self._get_location_specific_mock_results(business_name, location))
         
-        return search_results
+        # Remove duplicates and limit results
+        unique_results = []
+        seen_urls = set()
+        for result in search_results:
+            if result['url'] not in seen_urls and len(unique_results) < 10:
+                unique_results.append(result)
+                seen_urls.add(result['url'])
+        
+        return unique_results
 
     def _get_mock_search_results(self, business_name: str) -> List[Dict[str, str]]:
         """Return mock search results for development"""
+        # Target locations for Opelika/Auburn AL and Columbus/West Point GA
+        target_locations = [
+            "Opelika Alabama",
+            "Auburn Alabama", 
+            "Columbus Georgia",
+            "West Point Georgia"
+        ]
+        
+        results = []
+        for location in target_locations:
+            # Create location-specific URLs
+            business_slug = business_name.replace(' ', '').lower()
+            location_slug = location.replace(' ', '').lower()
+            
+            results.extend([
+                {
+                    "title": f"Official Website - {business_name} ({location})",
+                    "url": f"https://{business_slug}-{location_slug}.com",
+                    "snippet": f"Official business website for {business_name} in {location}",
+                    "location": location
+                },
+                {
+                    "title": f"{business_name} - {location} Business Directory",
+                    "url": f"https://yellowpages.com/{location_slug}/{business_slug}",
+                    "snippet": f"{business_name} listed in {location} business directory",
+                    "location": location
+                },
+                {
+                    "title": f"{business_name} Contact - {location}",
+                    "url": f"https://{business_slug}.com/contact-{location_slug}",
+                    "snippet": f"Contact information for {business_name} in {location}",
+                    "location": location
+                }
+            ])
+        
+        return results[:10]  # Limit to 10 results
+
+    def _get_location_specific_mock_results(self, business_name: str, location: str) -> List[Dict[str, str]]:
+        """Return location-specific mock search results"""
+        business_slug = business_name.replace(' ', '').lower()
+        location_slug = location.replace(' ', '').lower()
+        
         return [
             {
-                "title": f"Official Website - {business_name}",
-                "url": f"https://{business_name.replace(' ', '').lower()}.com",
-                "snippet": f"Official business website for {business_name}"
+                "title": f"{business_name} - {location}",
+                "url": f"https://{business_slug}-{location_slug}.com",
+                "snippet": f"Official website for {business_name} in {location}",
+                "location": location
             },
             {
-                "title": f"{business_name} - LinkedIn Company Profile",
-                "url": f"https://linkedin.com/company/{business_name.replace(' ', '-').lower()}",
-                "snippet": f"LinkedIn business profile for {business_name}"
+                "title": f"{business_name} - {location} Chamber of Commerce",
+                "url": f"https://chamberofcommerce.org/{location_slug}/{business_slug}",
+                "snippet": f"{business_name} listed in {location} Chamber of Commerce",
+                "location": location
             },
             {
-                "title": f"{business_name} Contact Information",
-                "url": f"https://{business_name.replace(' ', '').lower()}.com/contact",
-                "snippet": f"Contact details for {business_name}"
-            },
-            {
-                "title": f"About {business_name}",
-                "url": f"https://en.wikipedia.org/wiki/{business_name.replace(' ', '_')}",
-                "snippet": f"Wikipedia information about {business_name}"
-            },
-            {
-                "title": f"{business_name} Reviews and Ratings",
-                "url": f"https://google.com/maps/search/{business_name.replace(' ', '+')}",
-                "snippet": f"Google Maps listing for {business_name}"
+                "title": f"{business_name} - Google My Business ({location})",
+                "url": f"https://google.com/maps/place/{business_name}+{location.replace(' ', '+')}",
+                "snippet": f"Google Maps listing for {business_name} in {location}",
+                "location": location
             }
         ]
+
+    def _is_location_relevant(self, url: str, query: str) -> bool:
+        """Check if the URL is relevant to the target locations"""
+        location_keywords = [
+            'opelika', 'auburn', 'alabama', 'al',
+            'columbus', 'west point', 'georgia', 'ga'
+        ]
+        
+        url_lower = url.lower()
+        query_lower = query.lower()
+        
+        # Check if the URL contains any location keywords
+        for keyword in location_keywords:
+            if keyword in url_lower or keyword in query_lower:
+                return True
+        
+        # Additional checks for business directories and local sites
+        local_indicators = [
+            'yellowpages', 'chamber', 'local', 'directory',
+            'maps', 'google', 'yelp', 'facebook'
+        ]
+        
+        for indicator in local_indicators:
+            if indicator in url_lower:
+                return True
+        
+        return False
 
     async def extract_contact_data(self, urls: List[str]) -> Dict[str, Any]:
         """Extract contact information from URLs"""
@@ -226,26 +312,25 @@ class BusinessResearchService:
         return None
 
     def _get_mock_contact_data(self) -> Dict[str, Any]:
-        """Return mock contact data for development"""
+        """Return location-specific mock contact data for Alabama and Georgia businesses"""
+        # Mock data for regional businesses in Opelika/Auburn AL and Columbus/West Point GA
         return {
-            "email": {"value": "contact@techcorp.com", "validation_status": "verified"},
-            "phone": {"value": "+1-555-123-4567", "formatting": "E.164"},
+            "email": {"value": "contact@opelikahardware.com", "validation_status": "verified"},
+            "phone": {"value": "+1-334-555-1234", "formatting": "E.164"},
             "social_links": {
-                "linkedin": "https://linkedin.com/company/techcorp",
-                "twitter": "https://twitter.com/techcorp",
-                "facebook": "https://facebook.com/techcorp"
+                "linkedin": "https://linkedin.com/company/opelika-hardware-store",
+                "facebook": "https://facebook.com/opelikahardware",
+                "instagram": "https://instagram.com/opelikahardware"
             },
             "sources": [
-                {"field": "email", "url": "https://techcorp.com/contact", "extraction_method": "regex_pattern"},
-                {"field": "phone", "url": "https://techcorp.com/contact", "extraction_method": "regex_pattern"},
-                {"field": "social_links", "url": "https://techcorp.com", "extraction_method": "link_extraction"}
+                {"field": "email", "url": "https://opelikahardware.com/contact", "extraction_method": "regex_pattern"},
+                {"field": "phone", "url": "https://opelikahardware.com/contact", "extraction_method": "regex_pattern"},
+                {"field": "social_links", "url": "https://opelikahardware.com", "extraction_method": "link_extraction"}
             ]
         }
 
     async def perform_technical_audit(self, url: str) -> Dict[str, Any]:
         """Analyze website performance and technical aspects"""
-        await db_manager.add_research_log("task_id", "Performing technical website audit...", 70, "RUNNING")
-        
         audit_results = {
             "overall_grade": "B",
             "metrics": {

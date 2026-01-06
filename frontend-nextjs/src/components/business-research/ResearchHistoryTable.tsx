@@ -30,11 +30,11 @@ export const ResearchHistoryTable: React.FC<ResearchHistoryTableProps> = ({ clas
       setHistory(data || []);
     } catch (error) {
       console.error('Failed to fetch research history:', error);
-      // Mock data for development
+      // Mock data for regional businesses in Opelika/Auburn AL and Columbus/West Point GA
       setHistory([
         {
           task_id: 'mock-1',
-          business_name: 'TechCorp Solutions',
+          business_name: 'Opelika Family Pharmacy',
           date: '2024-01-15T10:30:00Z',
           grade: 'B',
           contact_count: 3,
@@ -42,7 +42,7 @@ export const ResearchHistoryTable: React.FC<ResearchHistoryTableProps> = ({ clas
         },
         {
           task_id: 'mock-2',
-          business_name: 'Digital Marketing Pro',
+          business_name: 'Auburn Dental Associates',
           date: '2024-01-14T15:45:00Z',
           grade: 'A',
           contact_count: 5,
@@ -50,10 +50,18 @@ export const ResearchHistoryTable: React.FC<ResearchHistoryTableProps> = ({ clas
         },
         {
           task_id: 'mock-3',
-          business_name: 'StartupXYZ',
+          business_name: 'Columbus Auto Body',
           date: '2024-01-13T09:15:00Z',
           grade: 'D',
           contact_count: 1,
+          status: 'COMPLETED'
+        },
+        {
+          task_id: 'mock-4',
+          business_name: 'West Point Hardware',
+          date: '2024-01-12T14:20:00Z',
+          grade: 'C',
+          contact_count: 2,
           status: 'COMPLETED'
         }
       ]);
