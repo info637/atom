@@ -94,3 +94,8 @@ humanize>=4.7.0,<5.0.0
 pyyaml>=6.0.0,<7.0.0
 ujson>=5.7.0,<6.0.0
 apscheduler>=3.10.0,<4.0.0
+
+# Browser Automation & Web Scraping
+playwright>=1.40.0,<2.0.0
+selenium>=4.15.0,<5.0.0
+httpx>=0.24.0,<1.0.0
